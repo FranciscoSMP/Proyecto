@@ -11,17 +11,17 @@ using namespace std; // Para uso de cin y cout.
 // Declaración de estructura datos.
 
 struct datos{
-	string nombre, apellido;
-	int DPI;
+	string nombre, apellido, DPI;
 };
 
 // Prototipos de funciones y métodos.
 
 MYSQL* conectar_bd();
 void ingresar_datos();
-void menu();
-void mostrar_productos(int);
+void menu(string);
+void mostrar_productos(int, int, string);
 int numero_aleatorio();
+void info_pedido();
 
 int main(){
 	
@@ -33,10 +33,6 @@ int main(){
 	
 	ingresar_datos();
 	
-	// Llamando al método menu.
-	
-	menu();
-	
 	return 0;
 }
 
@@ -47,7 +43,7 @@ MYSQL* conectar_bd(){
 	// Estableciendo conexión con la base de datos.
 	
     MYSQL* conectar = mysql_init(0);
-    conectar = mysql_real_connect(conectar, "localhost", "root", "r62af79a", "toma_pedidos", 3306, NULL, 0);
+    conectar = mysql_real_connect(conectar, "127.0.0.1", "Admin", "r62af79a", "toma_pedidos", 3306, NULL, 0);
     return conectar; 
 }
 
@@ -65,8 +61,7 @@ void ingresar_datos(){
 	cout<<"\t\tTOMA PEDIDOS"<<endl;
 	cout<<"\t\t============\n"<<endl;
 	cout<<"\tIngrese sus datos personales\n"<<endl;
-	cout<<"\tDPI: "; cin>>vardatos.DPI;
-	fflush(stdin);
+	cout<<"\tDPI: "; getline(cin, vardatos.DPI);
 	cout<<"\tNombre: ";getline(cin, vardatos.nombre);
 	cout<<"\tApellido: ";getline(cin, vardatos.apellido);
 	cout<<"\n\n\n\n\t=== Datos Ingresados Correctamente ===\n\n"<<endl;
@@ -78,17 +73,21 @@ void ingresar_datos(){
 	
 	// Preparando la consulta SQL e insertar los datos ingresados por el usuario en la tabla clientes.
 	
-    string consulta = "INSERT INTO cliente (idcliente, nombre, apellido) VALUES ('" + to_string(vardatos.DPI) + "', '" + vardatos.nombre + "', '" + vardatos.apellido + "')";
+    string consulta = "INSERT INTO cliente (idcliente, nombre, apellido) VALUES ('" + vardatos.DPI + "', '" + vardatos.nombre + "', '" + vardatos.apellido + "')";
     mysql_query(conexion, consulta.c_str());
     
     // Cerrar la conexión a la base de datos
     
     mysql_close(conexion);
+    
+    // Llamando al método menu.
+    
+    menu(vardatos.DPI);
 }
 
 // Definición del método menu.
  
-void menu(){
+void menu(string DPI){
 	
 	// Limpiando pantalla.
 	
@@ -96,7 +95,7 @@ void menu(){
 	
 	// Declaración de varaibles.
 	
-	int op;
+	int op, numero_pedido = numero_aleatorio();
 	
 	// Mostrando franjas disponibles y solicitando el ingreso de una opción.
 	
@@ -110,31 +109,27 @@ void menu(){
 	cout<<"\t3. Franja de cena\n"<<endl;
 	cout<<"\t";cin>>op;
 	
+	// Llamando a la funcion conectar_bd para establecer conexion con la base de datos.
+    
+	MYSQL* conexion = conectar_bd();
+	
+	// Preparando la consulta SQL e insertar los datos en la tabla.
+	
+    string consulta = "INSERT INTO pedido (idpedido, franja_idfranja, cliente_idcliente) VALUES ('" + to_string(numero_pedido) + "', '" + to_string(op) + "', '" + DPI + "')";
+    mysql_query(conexion, consulta.c_str());
+    
+    // Cerrar la conexión a la base de datos
+    
+    mysql_close(conexion);
+	
 	// Mostrando franjas segun la opción ingresada, llamando al método mostrar_productos.
 	
-	switch(op){
-		
-		case 1:
-			mostrar_productos(op);
-		break;
-				
-		case 2:
-			mostrar_productos(op);
-		break;
-		
-		case 3:
-			mostrar_productos(op);
-		break;
-		
-		default:
-			cout<<"Error, ha ingresado una opción inválida"<<endl;
-		break;
-	}
+	mostrar_productos(op, numero_pedido, DPI);
 }
 
 // Definición del método mostrar_productos.
 
-void mostrar_productos(int idFranjas) {
+void mostrar_productos(int idFranjas, int idPedido, string DPI) {
     
     // Declaración de variables.
     
@@ -185,15 +180,28 @@ void mostrar_productos(int idFranjas) {
 	    cout<<"\t";cin>>id;
 	    
 	    if(id != 0){
-	    	cout<<"\n\tSu producto ha sido agregado.\n"<<endl;
+	    	
+	    	// Preparando la consulta SQL e insertar los datos en la tabla detalle_pedido.
+	
+    		string consulta = "INSERT INTO detalle_pedido (producto_idproducto, pedido_idpedido) VALUES ('" + to_string(id) + "', '" + to_string(idPedido) + "')";
+			mysql_query(conexion, consulta.c_str());
+				
+			// Cerrar la conexión a la base de datos
+    
+    		mysql_close(conexion);
+	    	
+			cout<<"\n\t\t=== Su producto ha sido agregado ===\n"<<endl;
 		}
 		else
-			cout<<"\n\tProductos agregados con éxito.\n"<<endl;	
+			cout<<"\n\t\t=== Productos agregados con éxito ===\n"<<endl;	
 			
 	    system("pause");
 	    contador = 1;
 	    
-    }while(id != 0); 
+    }while(id != 0);
+    
+    info_pedido();
+    
 }
 
 // Definición de la función numero_aleatorio.
@@ -209,4 +217,8 @@ int numero_aleatorio(){
     int num;
     
     return num = rand() % 90000 + 10000;
+}
+
+void info_pedido(){
+		
 }
