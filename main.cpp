@@ -21,7 +21,7 @@ void ingresar_datos();
 void menu(string);
 void mostrar_productos(int, int, string);
 int numero_aleatorio();
-void info_pedido();
+void info_pedido(int);
 
 int main(){
 	
@@ -200,7 +200,7 @@ void mostrar_productos(int idFranjas, int idPedido, string DPI) {
 	    
     }while(id != 0);
     
-    info_pedido();
+    info_pedido(idPedido);
     
 }
 
@@ -219,6 +219,7 @@ int numero_aleatorio(){
     return num = rand() % 90000 + 10000;
 }
 
-void info_pedido(){
-		
+void info_pedido(int idPedido){
+		system("cls");
+		cout<<"\t"<<idPedido<<endl;
 }
