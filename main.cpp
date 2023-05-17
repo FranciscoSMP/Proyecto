@@ -220,6 +220,37 @@ int numero_aleatorio(){
 }
 
 void info_pedido(int idPedido){
-		system("cls");
-		cout<<"\t"<<idPedido<<endl;
+	
+	system("cls");
+	
+	// Conectarse a la base de datos
+    MYSQL* conexion = conectar_bd();
+    
+    // Consulta para obtener los productos elegidos para el pedido dado
+    string consulta_productos = "SELECT p.nombre, p.descripcion, p.precio "
+                                "FROM producto p "
+                                "INNER JOIN detalle_pedido dp ON p.idproducto = dp.producto_idproducto "
+                                "WHERE dp.pedido_idpedido = '" + to_string(idPedido) + "'";
+    mysql_query(conexion, consulta_productos.c_str());
+
+    MYSQL_RES* resultado_productos = mysql_store_result(conexion);
+    MYSQL_ROW fila_producto;
+
+    // Mostrar información de los productos elegidos
+    cout << "Productos elegidos para el pedido " << idPedido << ":" << endl;
+
+    while ((fila_producto = mysql_fetch_row(resultado_productos)) != nullptr) {
+        string nombre = fila_producto[0];
+        string descripcion = fila_producto[1];
+        string precio = fila_producto[2];
+
+        cout << "Nombre: " << nombre << endl;
+        cout << "Descripción: " << descripcion << endl;
+        cout << "Precio: " << precio << endl;
+        cout << endl;
+    }
+
+    // Liberar recursos y cerrar la conexión a la base de datos
+    mysql_free_result(resultado_productos);
+    mysql_close(conexion);
 }
