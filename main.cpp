@@ -17,10 +17,10 @@ struct datos{
 // Prototipos de funciones y métodos.
 
 MYSQL* conectar_bd();
+int numero_aleatorio();
 void ingresar_datos();
 void menu(string);
-void mostrar_productos(int, int, string);
-int numero_aleatorio();
+void mostrar_productos(int, int);
 void info_pedido(int);
 
 int main(){
@@ -31,7 +31,9 @@ int main(){
 	
 	// Llamando al método ingresar_datos.
 	
-	ingresar_datos();
+	//ingresar_datos();
+	
+	info_pedido(18192);
 	
 	return 0;
 }
@@ -47,6 +49,21 @@ MYSQL* conectar_bd(){
     return conectar; 
 }
 
+// Definición de la función numero_aleatorio.
+
+int numero_aleatorio(){
+	
+	// Obtener el valor actual del reloj del sistema como semilla.
+	
+    srand(time(0));
+    
+    // Retornando un número aleatorio de 5 cifras.
+    
+    int num;
+    
+    return num = rand() % 90000 + 10000;
+}
+
 // Definición del método ingresar_datos.
 
 void ingresar_datos(){
@@ -57,11 +74,11 @@ void ingresar_datos(){
 	
 	// Solicitando datos del usuario.
 	
-	cout<<"\t\t============"<<endl;
-	cout<<"\t\tTOMA PEDIDOS"<<endl;
-	cout<<"\t\t============\n"<<endl;
-	cout<<"\tIngrese sus datos personales\n"<<endl;
-	cout<<"\tDPI: "; getline(cin, vardatos.DPI);
+	cout<<"\t\t\t============"<<endl;
+	cout<<"\t\t\tTOMA PEDIDOS"<<endl;
+	cout<<"\t\t\t============\n"<<endl;
+	cout<<"\t\tIngrese sus datos personales\n"<<endl;
+	cout<<"\tNo. de DPI (sin espacios): "; getline(cin, vardatos.DPI);
 	cout<<"\tNombre: ";getline(cin, vardatos.nombre);
 	cout<<"\tApellido: ";getline(cin, vardatos.apellido);
 	cout<<"\n\n\n\n\t=== Datos Ingresados Correctamente ===\n\n"<<endl;
@@ -124,12 +141,12 @@ void menu(string DPI){
 	
 	// Mostrando franjas segun la opción ingresada, llamando al método mostrar_productos.
 	
-	mostrar_productos(op, numero_pedido, DPI);
+	mostrar_productos(op, numero_pedido);
 }
 
 // Definición del método mostrar_productos.
 
-void mostrar_productos(int idFranjas, int idPedido, string DPI) {
+void mostrar_productos(int idFranjas, int idPedido) {
     
     // Declaración de variables.
     
@@ -178,7 +195,7 @@ void mostrar_productos(int idFranjas, int idPedido, string DPI) {
 	    
 	    cout<<"\n\tEliga el ID producto, ingrese 0 para terminar\n"<<endl;
 	    cout<<"\t";cin>>id;
-	    
+
 	    if(id != 0){
 	    	
 	    	// Preparando la consulta SQL e insertar los datos en la tabla detalle_pedido.
@@ -204,53 +221,68 @@ void mostrar_productos(int idFranjas, int idPedido, string DPI) {
     
 }
 
-// Definición de la función numero_aleatorio.
-
-int numero_aleatorio(){
-	
-	// Obtener el valor actual del reloj del sistema como semilla.
-	
-    srand(time(0));
-    
-    // Retornando un número aleatorio de 5 cifras.
-    
-    int num;
-    
-    return num = rand() % 90000 + 10000;
-}
-
 void info_pedido(int idPedido){
 	
 	system("cls");
 	
-	// Conectarse a la base de datos
+	//Declaración de variables.
+		
+	int contador = 1;
+	datos vardatos;
+	
+	// Conectarse a la base de datos.
+	
     MYSQL* conexion = conectar_bd();
     
-    // Consulta para obtener los productos elegidos para el pedido dado
+    // Consulta para obtener los datos del cliente.
+    
+    string consultaCliente = "SELECT c.nombre, c.apellido FROM cliente c INNER JOIN pedido p ON c.idcliente = p.cliente_idcliente WHERE p.idpedido = " + to_string(idPedido);
+    mysql_query(conexion, consultaCliente.c_str());
+    MYSQL_RES* resultadoCliente = mysql_store_result(conexion);
+    if (MYSQL_ROW filaCliente = mysql_fetch_row(resultadoCliente)) {
+        vardatos.nombre = filaCliente[0];
+        vardatos.apellido = filaCliente[1];
+    }
+    
+    // Consulta para obtener los productos elegidos.
+    
     string consulta_productos = "SELECT p.nombre, p.descripcion, p.precio "
                                 "FROM producto p "
                                 "INNER JOIN detalle_pedido dp ON p.idproducto = dp.producto_idproducto "
                                 "WHERE dp.pedido_idpedido = '" + to_string(idPedido) + "'";
     mysql_query(conexion, consulta_productos.c_str());
-
     MYSQL_RES* resultado_productos = mysql_store_result(conexion);
     MYSQL_ROW fila_producto;
 
-    // Mostrar información de los productos elegidos
-    cout << "Productos elegidos para el pedido " << idPedido << ":" << endl;
+    // Mostrar información de los productos elegidos.
+    
+    cout<<"\t\t===================="<<endl;    
+	cout<<"\t\t DETALLE DEL PEDIDO"<<endl;
+	cout<<"\t\t===================="<<endl;
+    cout<<"\t\t Productos Comprados"<<endl;
+    cout<<"\t\t====================\n"<<endl;
+    
+    cout << "\t=== Información del Cliente ===" << endl;
+    cout << "\tPedido ID: " <<idPedido<< endl;
+    cout << "\tNombre: " <<vardatos.nombre<< endl;
+    cout << "\tApellido: " << vardatos.apellido << endl;
 
     while ((fila_producto = mysql_fetch_row(resultado_productos)) != nullptr) {
         string nombre = fila_producto[0];
         string descripcion = fila_producto[1];
         string precio = fila_producto[2];
 
-        cout << "Nombre: " << nombre << endl;
-        cout << "Descripción: " << descripcion << endl;
-        cout << "Precio: " << precio << endl;
-        cout << endl;
+        cout<<"\t"<<contador<<". Nombre: "<<nombre<<endl;
+        cout<<"\t   Descripción: "<<descripcion<<endl;
+        cout<<"\t   Precio: "<<precio<<endl;
+        cout<<endl;
+        
+        contador = ++contador;
     }
 
-    // Liberar recursos y cerrar la conexión a la base de datos
-    mysql_free_result(resultado_productos);
+    // Liberar recursos y cerrar la conexión a la base de datos.
+    
+    mysql_free_result(resultadoCliente);
+	mysql_free_result(resultado_productos);
     mysql_close(conexion);
 }
