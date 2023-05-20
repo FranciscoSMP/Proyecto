@@ -33,7 +33,7 @@ int main(){
 	
 	//ingresar_datos();
 	
-	info_pedido(18192);
+	info_pedido(19357);
 	
 	return 0;
 }
@@ -74,13 +74,13 @@ void ingresar_datos(){
 	
 	// Solicitando datos del usuario.
 	
-	cout<<"\t\t\t============"<<endl;
+	cout<<"\n\t\t\t============"<<endl;
 	cout<<"\t\t\tTOMA PEDIDOS"<<endl;
 	cout<<"\t\t\t============\n"<<endl;
 	cout<<"\t\tIngrese sus datos personales\n"<<endl;
 	cout<<"\tNo. de DPI (sin espacios): "; getline(cin, vardatos.DPI);
-	cout<<"\tNombre: ";getline(cin, vardatos.nombre);
-	cout<<"\tApellido: ";getline(cin, vardatos.apellido);
+	cout<<"\tNombres: ";getline(cin, vardatos.nombre);
+	cout<<"\tApellidos: ";getline(cin, vardatos.apellido);
 	cout<<"\n\n\n\n\t=== Datos Ingresados Correctamente ===\n\n"<<endl;
 	system("pause");
 	
@@ -116,7 +116,7 @@ void menu(string DPI){
 	
 	// Mostrando franjas disponibles y solicitando el ingreso de una opción.
 	
-	cout<<"\t\t============"<<endl;
+	cout<<"\n\t\t============"<<endl;
 	cout<<"\t\tTOMA PEDIDOS"<<endl;
 	cout<<"\t\t============"<<endl;
 	cout<<"\t\t  FRANJAS"<<endl;
@@ -150,7 +150,7 @@ void mostrar_productos(int idFranjas, int idPedido) {
     
     // Declaración de variables.
     
-    int contador = 1, id;
+    int contador = 1, id, lpedido = 0;
 
 	do{
 		
@@ -164,7 +164,7 @@ void mostrar_productos(int idFranjas, int idPedido) {
     
     	// Preparar la consulta SQL.
     
-   		string consulta = "SELECT idproducto, nombre, descripcion, precio FROM producto WHERE franja_idfranja = " + to_string(idFranjas);
+   		string consulta = "SELECT idproducto, nombre, descripcion, precio, existencia FROM producto WHERE franja_idfranja = " + to_string(idFranjas);
 
     	// Ejecutar la consulta SQL.
     
@@ -176,7 +176,7 @@ void mostrar_productos(int idFranjas, int idPedido) {
     	
 	    // Mostrando datos de los productos.
 	    
-	    cout<<"\t\t====================="<<endl;    
+	    cout<<"\n\t\t====================="<<endl;    
 	    cout<<"\t\tPRODUCTOS DISPONIBLES"<<endl;
 	    cout<<"\t\t=====================\n"<<endl;  
 	    
@@ -187,6 +187,7 @@ void mostrar_productos(int idFranjas, int idPedido) {
 	        cout<<"\t"<<contador<<". Nombre: "<<fila[1]<<endl;
 	        cout<<"\t   Descripción: "<<fila[2]<<endl;
 	        cout<<"\t   Precio: " <<fila[3]<<endl;
+	        cout<<"\t   En Existencia: " <<fila[4]<<" unidades"<<endl;
 	        cout<<"\t   ID: " <<fila[0]<<"\n"<<endl;
 	        contador = ++contador;
 	    }
@@ -198,10 +199,17 @@ void mostrar_productos(int idFranjas, int idPedido) {
 
 	    if(id != 0){
 	    	
+	    	lpedido = ++lpedido;
+	    	
 	    	// Preparando la consulta SQL e insertar los datos en la tabla detalle_pedido.
-	
-    		string consulta = "INSERT INTO detalle_pedido (producto_idproducto, pedido_idpedido) VALUES ('" + to_string(id) + "', '" + to_string(idPedido) + "')";
+			
+    		string consulta = "INSERT INTO detalle_pedido (producto_idproducto, pedido_idpedido, linea_pedido) VALUES ('" + to_string(id) + "', '" + to_string(idPedido) + "', '" + to_string(lpedido) + "')";
 			mysql_query(conexion, consulta.c_str());
+			
+			// Preparando la consulta SQL para actualizar la existencia de los productos.
+			
+			string eliminar = "UPDATE producto SET existencia = existencia - 1 WHERE idproducto = '" + to_string(id) + "' AND franja_idfranja = '" + to_string(idFranjas) + "'";
+    		mysql_query(conexion, eliminar.c_str());
 				
 			// Cerrar la conexión a la base de datos
     
@@ -217,11 +225,15 @@ void mostrar_productos(int idFranjas, int idPedido) {
 	    
     }while(id != 0);
     
+    // Llamando al método info_pedidos().
+    
     info_pedido(idPedido);
     
 }
 
 void info_pedido(int idPedido){
+	
+	// Limpiando pantalla.
 	
 	system("cls");
 	
@@ -236,12 +248,15 @@ void info_pedido(int idPedido){
     
     // Consulta para obtener los datos del cliente.
     
-    string consultaCliente = "SELECT c.nombre, c.apellido FROM cliente c INNER JOIN pedido p ON c.idcliente = p.cliente_idcliente WHERE p.idpedido = " + to_string(idPedido);
+    string consultaCliente = "SELECT c.idcliente, c.nombre, c.apellido FROM cliente c INNER JOIN pedido p ON c.idcliente = p.cliente_idcliente WHERE p.idpedido = " + to_string(idPedido);
     mysql_query(conexion, consultaCliente.c_str());
+    
     MYSQL_RES* resultadoCliente = mysql_store_result(conexion);
+    
     if (MYSQL_ROW filaCliente = mysql_fetch_row(resultadoCliente)) {
-        vardatos.nombre = filaCliente[0];
-        vardatos.apellido = filaCliente[1];
+        vardatos.nombre = filaCliente[1];
+        vardatos.apellido = filaCliente[2];
+        vardatos.DPI = filaCliente[0];
     }
     
     // Consulta para obtener los productos elegidos.
@@ -256,16 +271,14 @@ void info_pedido(int idPedido){
 
     // Mostrar información de los productos elegidos.
     
-    cout<<"\t\t===================="<<endl;    
+    cout<<"\n\t\t===================="<<endl;    
 	cout<<"\t\t DETALLE DEL PEDIDO"<<endl;
-	cout<<"\t\t===================="<<endl;
-    cout<<"\t\t Productos Comprados"<<endl;
-    cout<<"\t\t====================\n"<<endl;
+	cout<<"\t\t====================\n"<<endl;    
+    cout<<"\t=== Información del Cliente ===\n"<<endl;;
+    cout<<"\tNombre: "<<vardatos.nombre<<endl;
+    cout<<"\tApellido: "<<vardatos.apellido<<endl;
+    cout<<"\tNo. de DPI: "<<vardatos.DPI<<endl;
     
-    cout << "\t=== Información del Cliente ===" << endl;
-    cout << "\tPedido ID: " <<idPedido<< endl;
-    cout << "\tNombre: " <<vardatos.nombre<< endl;
-    cout << "\tApellido: " << vardatos.apellido << endl;
 
     while ((fila_producto = mysql_fetch_row(resultado_productos)) != nullptr) {
         string nombre = fila_producto[0];
