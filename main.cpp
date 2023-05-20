@@ -1,3 +1,4 @@
+// Compilador -std=c++11
 #include <iostream> // Librería estándar de entrada y salida.
 #include <mysql.h> // Librería MySQl para base de datos.
 #include <locale> // Librería para uso de carácteres especiales de español.
@@ -238,8 +239,8 @@ void info_pedido(int idPedido){
 	system("cls");
 	
 	//Declaración de variables.
-		
-	int contador = 1;
+	
+	int contador = 1;	
 	datos vardatos;
 	
 	// Conectarse a la base de datos.
@@ -268,30 +269,30 @@ void info_pedido(int idPedido){
     mysql_query(conexion, consulta_productos.c_str());
     MYSQL_RES* resultado_productos = mysql_store_result(conexion);
     MYSQL_ROW fila_producto;
-
+	
     // Mostrar información de los productos elegidos.
     
-    cout<<"\n\t\t===================="<<endl;    
-	cout<<"\t\t DETALLE DEL PEDIDO"<<endl;
-	cout<<"\t\t====================\n"<<endl;    
-    cout<<"\t=== Información del Cliente ===\n"<<endl;;
+    cout<<"\n\t      =================="<<endl;    
+	cout<<"\t      DETALLE DEL PEDIDO"<<endl;
+	cout<<"\t      ==================\n"<<endl;    
+    cout<<"\t=== Información del Cliente ===\n"<<endl;
     cout<<"\tNombre: "<<vardatos.nombre<<endl;
     cout<<"\tApellido: "<<vardatos.apellido<<endl;
-    cout<<"\tNo. de DPI: "<<vardatos.DPI<<endl;
-    
-
+    cout<<"\tNo. de DPI: "<<vardatos.DPI<<"\n\n"<<endl;
+    cout<<"\t  === Productos Comprados ===\n"<<endl;
     while ((fila_producto = mysql_fetch_row(resultado_productos)) != nullptr) {
         string nombre = fila_producto[0];
         string descripcion = fila_producto[1];
         string precio = fila_producto[2];
-
-        cout<<"\t"<<contador<<". Nombre: "<<nombre<<endl;
-        cout<<"\t   Descripción: "<<descripcion<<endl;
-        cout<<"\t   Precio: "<<precio<<endl;
-        cout<<endl;
-        
-        contador = ++contador;
+   		cout<<"       "<<contador<<". Nombre: "<<nombre<<endl;
+    	cout<<"\t  Descripción: "<<descripcion<<endl;
+    	cout<<"\t  Precio: "<<precio<<endl;
+		cout<<endl;
+		
+		contador = ++contador;
     }
+    
+    cout<<"\n\n\t=== Su número de orden es: "<<idPedido<<" ==="<<endl;
 
     // Liberar recursos y cerrar la conexión a la base de datos.
     
