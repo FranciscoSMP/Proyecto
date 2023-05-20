@@ -32,9 +32,7 @@ int main(){
 	
 	// Llamando al método ingresar_datos.
 	
-	//ingresar_datos();
-	
-	info_pedido(19357);
+	ingresar_datos();
 	
 	return 0;
 }
@@ -240,7 +238,7 @@ void info_pedido(int idPedido){
 	
 	//Declaración de variables.
 	
-	int contador = 1;	
+	string franja;	
 	datos vardatos;
 	
 	// Conectarse a la base de datos.
@@ -249,7 +247,11 @@ void info_pedido(int idPedido){
     
     // Consulta para obtener los datos del cliente.
     
-    string consultaCliente = "SELECT c.idcliente, c.nombre, c.apellido FROM cliente c INNER JOIN pedido p ON c.idcliente = p.cliente_idcliente WHERE p.idpedido = " + to_string(idPedido);
+    string consultaCliente = "SELECT c.idcliente, c.nombre, c.apellido, f.nombre AS franja "
+							 "FROM cliente c "
+							 "INNER JOIN pedido p ON c.idcliente = p.cliente_idcliente "
+							 "INNER JOIN franja f ON p.franja_idfranja = f.idfranja "
+							 "WHERE p.idpedido = " + to_string(idPedido);
     mysql_query(conexion, consultaCliente.c_str());
     
     MYSQL_RES* resultadoCliente = mysql_store_result(conexion);
@@ -258,18 +260,21 @@ void info_pedido(int idPedido){
         vardatos.nombre = filaCliente[1];
         vardatos.apellido = filaCliente[2];
         vardatos.DPI = filaCliente[0];
+        franja = filaCliente[3];
     }
     
     // Consulta para obtener los productos elegidos.
     
-    string consulta_productos = "SELECT p.nombre, p.descripcion, p.precio "
+    string consulta_productos = "SELECT p.nombre, p.descripcion, p.precio, dp.linea_pedido "
                                 "FROM producto p "
                                 "INNER JOIN detalle_pedido dp ON p.idproducto = dp.producto_idproducto "
+                                "INNER JOIN pedido pe ON dp.pedido_idpedido = pe.idpedido "
                                 "WHERE dp.pedido_idpedido = '" + to_string(idPedido) + "'";
+
     mysql_query(conexion, consulta_productos.c_str());
     MYSQL_RES* resultado_productos = mysql_store_result(conexion);
     MYSQL_ROW fila_producto;
-	
+    
     // Mostrar información de los productos elegidos.
     
     cout<<"\n\t      =================="<<endl;    
@@ -279,17 +284,17 @@ void info_pedido(int idPedido){
     cout<<"\tNombre: "<<vardatos.nombre<<endl;
     cout<<"\tApellido: "<<vardatos.apellido<<endl;
     cout<<"\tNo. de DPI: "<<vardatos.DPI<<"\n\n"<<endl;
-    cout<<"\t  === Productos Comprados ===\n"<<endl;
+    cout<<"\t  === Productos Comprados ==="<<endl;
+    cout<<"\t       Franja: "<<franja<<"\n"<<endl;
     while ((fila_producto = mysql_fetch_row(resultado_productos)) != nullptr) {
         string nombre = fila_producto[0];
         string descripcion = fila_producto[1];
         string precio = fila_producto[2];
-   		cout<<"       "<<contador<<". Nombre: "<<nombre<<endl;
+        string linea_pedido = fila_producto[3];
+   		cout<<"       "<<linea_pedido<<". Nombre: "<<nombre<<endl;
     	cout<<"\t  Descripción: "<<descripcion<<endl;
     	cout<<"\t  Precio: "<<precio<<endl;
 		cout<<endl;
-		
-		contador = ++contador;
     }
     
     cout<<"\n\n\t=== Su número de orden es: "<<idPedido<<" ==="<<endl;
