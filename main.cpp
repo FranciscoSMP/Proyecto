@@ -1,4 +1,3 @@
-// Compilador -std=c++11
 #include <iostream> // Librería estándar de entrada y salida.
 #include <mysql.h> // Librería MySQl para base de datos.
 #include <locale> // Librería para uso de carácteres especiales de español.
